@@ -1,47 +1,129 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart'; // ajusta el path si es necesario
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
+  State<LoginScreen> createState() => _LoginScreenState();
+}
 
+class _LoginScreenState extends State<LoginScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  bool isLoading = false;
+
+  Future<void> _login() async {
+    setState(() => isLoading = true);
+
+    try {
+        final result = await AuthService().login(
+        emailController.text.trim(),
+        passwordController.text.trim(),
+        );
+
+        final user = result['user'];
+        
+        setState(() => isLoading = false);
+
+        if (user != null) {
+        // Aquí podrías guardar el usuario o navegar
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Bienvenido, ${user['name']}')),
+        );
+        } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Correo o contraseña incorrectos')),
+        );
+        }
+    } catch (e) {
+        setState(() => isLoading = false);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+    }
+    }
+
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text("Iniciar sesión", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 40),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: "Correo electrónico"),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFFA709A), Color(0xFFFEE140)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Iniciar sesión",
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    hintText: "Correo electrónico",
+                    fillColor: Colors.white,
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: "Contraseña",
+                    fillColor: Colors.white,
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: isLoading ? null : _login,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.pink,
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text("Ingresar"),
+                ),
+                const SizedBox(height: 20),
+                TextButton(
+                  onPressed: () {},
+                  child: const Text(
+                    "¿No tienes cuenta? Crear una",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                )
+              ],
             ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: "Contraseña"),
-            ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: () {
-                // Lógica de login
-                print('Email: ${emailController.text}');
-                print('Password: ${passwordController.text}');
-              },
-              child: const Text("Ingresar"),
-            ),
-            TextButton(
-              onPressed: () {
-                // Navegar a la pantalla de registro
-              },
-              child: const Text("¿No tienes cuenta? Crear una"),
-            ),
-          ],
+          ),
         ),
       ),
     );
